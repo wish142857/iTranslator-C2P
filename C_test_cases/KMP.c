@@ -20,6 +20,7 @@ void KMP_matcher(char *P, char *T, int m, int n)
         pi[q] = k;
     }
     int q = 0;
+    int match = 0;
     for (int i = 1; i <= n; i++)
     {
         while (q > 0 && P[q + 1] != T[i])
@@ -29,8 +30,12 @@ void KMP_matcher(char *P, char *T, int m, int n)
         if (q == m)
         {
             printf("Pattern occurs with shift %d\n", i - m);
+            match = 1;
             q = pi[q];
         }
+    }
+    if (match == 0) {
+        printf("False");
     }
 }
 
