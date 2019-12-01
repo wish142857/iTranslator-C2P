@@ -71,9 +71,6 @@ tokens = tokens + tuple(reserved.values())
 
 literals = ';,:=.&![]{}~()+-*/%><^|?'
 
-
-
-
 t_ELLIPSIS = r'\.\.\.'
 t_RIGHT_ASSIGN = r'>>='
 t_LEFT_ASSIGN = r'<<='

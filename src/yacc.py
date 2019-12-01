@@ -1,7 +1,7 @@
 # coding=utf-8
 import ply.yacc as yacc
 from lex import tokens
-from AST import ASTInternalNode, ASTExternalNode
+from AST import ASTInternalNode
 
 
 # 文法入口产生式  用于推导出external_declaration列表
@@ -57,13 +57,13 @@ def p_storage_class_specifier(p):
                                 | STATIC
                                 | AUTO
                                 | REGISTER '''
-    p[0] = ASTExternalNode('storage_class_specifier', p[1])
+    p[0] = ASTInternalNode('storage_class_specifier', p[1:])
 
 
 # 函数修饰符
 def p_function_specifier(p):
     ''' function_specifier : INLINE '''
-    p[0] = ASTExternalNode('function_specifier', p[1])
+    p[0] = ASTInternalNode('function_specifier', p[1:])
 
 
 # 类型标识
@@ -80,10 +80,7 @@ def p_type_specifier(p):
                        | BOOL
                        | struct_or_union_specifier
                        | enum_specifier '''
-    if p[1] in ['void', 'char', 'short', 'int', 'long', 'float', 'double', 'signed', 'unsigned', 'bool']:
-        p[0] = ASTExternalNode('type_specifier', p[1])
-    else:
-        p[0] = ASTInternalNode('type_specifier', p[1:])
+    p[0] = ASTInternalNode('type_specifier', p[1:])
 
 
 # 类型限定符
@@ -91,7 +88,7 @@ def p_type_qualifier(p):
     ''' type_qualifier : CONST
                        | RESTRICT
                        | VOLATILE '''
-    p[0] = ASTExternalNode('type_qualifier', p[1])
+    p[0] = ASTInternalNode('type_qualifier', p[1:])
 
 
 # 枚举类型
@@ -130,7 +127,7 @@ def p_struct_or_union_specifier(p):
 def p_struct_or_union(p):
     ''' struct_or_union : STRUCT
                         | UNION '''
-    p[0] = ASTExternalNode('struct_or_union', p[1])
+    p[0] = ASTInternalNode('struct_or_union', p[1:])
 
 
 # 结构体或联合类型中的成员变量
@@ -207,10 +204,7 @@ def p_direct_declarator(p):
                         | direct_declarator '(' parameter_type_list ')'
                         | direct_declarator '(' identifier_list ')'
                         | direct_declarator '(' ')' '''
-    if len(p) == 2:
-        p[0] = ASTExternalNode('direct_declarator', p[1])
-    else:
-        p[0] = ASTInternalNode('direct_declarator', p[1:])
+    p[0] = ASTInternalNode('direct_declarator', p[1:])
 
 
 def p_identifier_list(p):
@@ -237,7 +231,7 @@ def p_assignment_operator(p):
                             | AND_ASSIGN
                             | XOR_ASSIGN
                             | OR_ASSIGN '''
-    p[0] = ASTExternalNode('assignment_operator', p[1])
+    p[0] = ASTInternalNode('assignment_operator', p[1:])
 
 
 def p_constant_expression(p):
@@ -342,7 +336,7 @@ def p_unary_operator(p):
                        | '-'
                        | '~'
                        | '!' '''
-    p[0] = ASTExternalNode('unary_operator', p[1])
+    p[0] = ASTInternalNode('unary_operator', p[1:])
 
 
 def p_postfix_expression(p):
@@ -508,10 +502,7 @@ def p_labeled_statement(p):
 def p_expression_statement(p):
     ''' expression_statement : ';'
                              | expression ';' '''
-    if len(p) == 2:
-        p[0] = ASTExternalNode('expression_statement', p[1])
-    else:
-        p[0] = ASTInternalNode('expression_statement', p[1:])
+    p[0] = ASTInternalNode('expression_statement', p[1:])
 
 
 def p_selection_statement(p):
