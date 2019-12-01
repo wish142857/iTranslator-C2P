@@ -2,7 +2,7 @@ import ply.lex as lex
 from ply.lex import TOKEN
 
 tokens = (
-    'NUMBER',
+    'CONSTANT',
     'STRING_LITERAL',
     'IDENTIFIER',
 
@@ -117,7 +117,7 @@ def t_IDENTIFIER(t):
 
 # A regular expression rule with some action code
 @TOKEN(number)
-def t_NUMBER(t):
+def t_CONSTANT(t):
     #t.value = int(t.value)
     return t
 
