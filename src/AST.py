@@ -15,10 +15,7 @@ class ASTInternalNode(ASTNode):
         self.children = children
 
     def __str__(self):
-        buffer = ''
-        for i in self.children:
-            buffer += (str(i).strip() + ' ')
-        return buffer
+        return ' '.join(map(str, self.children))
 
 
 class ASTExternalNode(ASTNode):

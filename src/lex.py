@@ -5,7 +5,6 @@ tokens = (
     'CONSTANT',
     'STRING_LITERAL',
     'IDENTIFIER',
-
     'ELLIPSIS',
     'RIGHT_ASSIGN',
     'LEFT_ASSIGN',
@@ -49,9 +48,11 @@ reserved = {
     'for': 'FOR',
     'goto': 'GOTO',
     'if': 'IF',
+    'inline': 'INLINE',
     'int': 'INT',
     'long': 'LONG',
     'register': 'REGISTER',
+    'restrict': 'RESTRICT',
     'return': 'RETURN',
     'short': 'SHORT',
     'signed': 'SIGNED',
@@ -125,23 +126,28 @@ def t_CONSTANT(t):
 def t_STRING_LITERAL(t):
     return t
 
+
 # Define a rule so we can track line numbers
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
+
 # A string containing ignored characters (spaces and tabs)
 t_ignore = ' \t\v\f'
+
 
 # ignore comment
 def t_COMMENT(t):
     r'//[^\n]*'
     pass
 
+
 # Error handling rule
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
+
 
 # Compute column.
 #     input is the input text string
@@ -153,8 +159,11 @@ def find_column(input, token):
     column = (token.lexpos - last_cr) + 1
     return column
 
+
 # Build the lexer from my environment and return it
 lexer = lex.lex()
+
+"""
 test_str = '''
 this is a test
 't'
@@ -169,5 +178,4 @@ while True:
     if not tok:
         break
     print(tok, find_column(test_str, tok))
-
-
+"""
