@@ -48,23 +48,35 @@ class Translator:
             res = [code_list[1][0]+' = '+code_list[1][0]+' + 1']
             print(res)
             return res
-
+        # return
+        elif tree.key == 'jump_statement' and tree.children[0].key == 'return' and len(tree.children) == 2:
+            return ['return']
+        elif tree.key == 'jump_statement' and tree.children[0].key == 'return' and len(tree.children) == 3:
+            return [code_list[0][0] + ' '+ code_list[1][0]]
+        # struct
+        elif tree.key == 'struct_or_union_specifier' and len(tree.children) == 5:
+            print(code_list[1])
+            print(code_list[3])
+            mstr = ''
+            for item in code_list[3]:
+                mstr += item
+            print(code_list[1][0] + '={' + mstr + '}')
+            return [code_list[1][0] + '={' + mstr + '}']
+        elif tree.key == 'struct_declaration':
+            return [ '\''+ code_list[1][0] + '\'' + ':\'\', ']
         elif tree.key == 'selection_statement':
             if len(tree.children) == 5:
                 return ['if '+code_list[2][0]+':', code_list[4]]
             if len(tree.children) == 7:
                 return ['if '+code_list[2][0]+':', code_list[4], 'else:', code_list[6]]
-
+        # while
         elif tree.key == 'iteration_statement':
             if tree.children[0].value == 'while':
-                return ['while'+' '+code_list[2][0]+':', code_list[4]]
-            # for (int i = 0; i < n; ++i)
+                return ['while '+' '+code_list[2][0]+':', code_list[4]]
             if len(tree.children) == 7:
-                return [code_list[2][0], 'while' + code_list[3][0] + ':', code_list[6], code_list[4]]
-
+                return [code_list[2][0], 'while ' + code_list[3][0] + ':', code_list[6], code_list[4]]
         elif tree.key == 'block_item_list':
             lst = []
-            #print(code_list, tree.key, tree.children)
             for code in code_list:
                 for c in code:
                     lst.append(c)
@@ -81,12 +93,12 @@ class Translator:
                 pass
             elif len(tree.children) == 3:
                 return ['def '+code_list[1][0]+':', code_list[2]]
-        #elif tree.key == 'direct_declaration':
-
         # in x = 1 中int的去除
         elif tree.key == 'declaration':
             if len(tree.children) == 3:
                 return code_list[1]
+            elif len(tree.children) == 2:
+                return code_list[0]
         # int s[10]; ==> s = [0]*10
         elif tree.key == 'direct_declarator' and len(tree.children) == 4 and \
                 isinstance(tree.children[2], ASTInternalNode) and \
@@ -108,6 +120,9 @@ class Translator:
                 return code_list[1]
             elif len(tree.children) == 1:
                 pass
+        # 函数列表中s[]的去除
+        elif tree.key == 'direct_declarator' and len(tree.children) == 3 and tree.children[1] == '[':
+            return [code_list[0][0]]
         else:
             lst = []
             flag = True
@@ -142,9 +157,11 @@ class Translator:
         if tree.value == ';':
             return ['']
         elif tree.value == '&&':
-            return ['and']
+            return [' and ']
         elif tree.value == '||':
-            return ['or']
+            return [' or ']
+        elif tree.value == '!':
+            return ['not ']
         else:
             return [tree.value]
 
