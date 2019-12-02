@@ -4,11 +4,11 @@ from yacc import parser
 import os
 
 
-INDENT_STRING = '  '
+INDENT_STRING = '    '
 
 
 def formatIndent(item, rank=-1):
-    print(item)
+    #print(item)
     if type(item) == str:
         return INDENT_STRING * rank + item
     if type(item) == list:
@@ -42,11 +42,26 @@ class Translator:
                 return line + input_file.read()
 
     def compose(self, tree, code_list):
-        if tree.key == 'selection_statement':
+        # ++i
+        if tree.key == 'unary_expression' and isinstance(tree.children[0], ASTExternalNode)\
+                and tree.children[0].value == '++':
+            res = [code_list[1][0]+' = '+code_list[1][0]+' + 1']
+            print(res)
+            return res
+
+        elif tree.key == 'selection_statement':
             if len(tree.children) == 5:
                 return ['if '+code_list[2][0]+':', code_list[4]]
             if len(tree.children) == 7:
                 return ['if '+code_list[2][0]+':', code_list[4], 'else:', code_list[6]]
+
+        elif tree.key == 'iteration_statement':
+            if tree.children[0].value == 'while':
+                return ['while'+' '+code_list[2][0]+':', code_list[4]]
+            # for (int i = 0; i < n; ++i)
+            if len(tree.children) == 7:
+                return [code_list[2][0], 'while' + code_list[3][0] + ':', code_list[6], code_list[4]]
+
         elif tree.key == 'block_item_list':
             lst = []
             #print(code_list, tree.key, tree.children)
@@ -54,20 +69,74 @@ class Translator:
                 for c in code:
                     lst.append(c)
             return lst
+        # 函数大括号的去除
+        elif tree.key == 'compound_statement':
+            if len(tree.children) == 3:
+                return code_list[1]
+            elif len(tree.children) == 2:
+                return ['pass']
+        # 函数前加def
+        elif tree.key == 'function_definition':
+            if len(tree.children) == 4:
+                pass
+            elif len(tree.children) == 3:
+                return ['def '+code_list[1][0]+':', code_list[2]]
+        #elif tree.key == 'direct_declaration':
+
+        # in x = 1 中int的去除
+        elif tree.key == 'declaration':
+            if len(tree.children) == 3:
+                return code_list[1]
+        # int s[10]; ==> s = [0]*10
+        elif tree.key == 'direct_declarator' and len(tree.children) == 4 and \
+                isinstance(tree.children[2], ASTInternalNode) and \
+                    tree.children[2].key == 'assignment_expression':
+            return [code_list[0][0] + '=[' + '0' + ']*' + code_list[2][0]]
+        # int s[10] = {1}; ==>  s = [1]*10
+        elif tree.key == 'init_declarator' and len(tree.children) == 3 and code_list[0][0].find('[') >= 0:
+            tmp = code_list[0][0]
+            index_1 = tmp.find('[')
+            index_2 = tmp.find(']')
+            code_list[0][0] = tmp[:index_1+1]+code_list[2][0]+tmp[index_2:]
+            print(code_list[0][0])
+            return [str(code_list[0][0])]
+        elif tree.key == 'initializer' and len(tree.children) == 3:
+            return code_list[1]
+        # 函数参数列表中int的去除
+        elif tree.key == 'parameter_declaration':
+            if len(tree.children) == 2:
+                return code_list[1]
+            elif len(tree.children) == 1:
+                pass
         else:
             lst = []
-            s = ''
+            flag = True
             for code in code_list:
-                for c in code:
-                    if isinstance(c, str):
-                        s += c
-                    else:
-                        lst.append(s)
-                        lst.append(c)
-                        s = ''
-            if len(s) != 0:
+                if len(code) != 1:
+                    flag = False
+            if flag:
+                s = ''
+                for code in code_list:
+                    s += code[0]
                 lst.append(s)
+            else:
+                for code in code_list:
+                    lst.extend(code)
             return lst
+            # lst = []
+            # s = ''
+            # for code in code_list:
+            #     for c in code:
+            #         if isinstance(c, str):
+            #             s += c
+            #         else:
+            #             if len(s) != 0:
+            #                 lst.append(s)
+            #             lst.append(c)
+            #             s = ''
+            # if len(s) != 0:
+            #     lst.append(s)
+            # return lst
 
     def leaf_string(self, tree):
         if tree.value == ';':
@@ -88,7 +157,7 @@ class Translator:
             return self.leaf_string(tree)
         for child in tree.children:
             code_list.append(self.traversal(child, stack))
-        print(code_list)
+        #print(tree.key, code_list)
         pycode = self.compose(tree, code_list)
         stack.pop()
         return pycode
@@ -121,4 +190,4 @@ class Translator:
 
 if __name__ == '__main__':
     translator = Translator()
-    translator.translate('1.txt', '1.out')
+    translator.translate('1.txt', '2.txt')
