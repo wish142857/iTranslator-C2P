@@ -52,6 +52,19 @@ class Translator:
             res = [code_list[1][0]+' = '+code_list[1][0]+' + 1']
             # print(res)
             return res
+        # --i
+        elif tree.key == 'unary_expression' and isinstance(tree.children[0], ASTExternalNode)\
+                and tree.children[0].value == '--':
+            res = [code_list[1][0]+' = '+code_list[1][0]+' - 1']
+            return res
+        # i++
+        elif tree.key == 'postfix_expression' and len(tree.children)==2:
+            if tree.children[1].value == '--':
+                res = [code_list[0][0]+' = '+code_list[0][0]+' - 1']
+                return res
+            if tree.children[1].value == '++':
+                res = [code_list[0][0]+' = '+code_list[0][0]+' + 1']
+                return res
         # return
         elif tree.key == 'jump_statement' and tree.children[0].key == 'return' and len(tree.children) == 2:
             return ['return']
@@ -237,4 +250,4 @@ class Translator:
 
 if __name__ == '__main__':
     translator = Translator()
-    translator.translate('palindrome.c', '2.py')
+    translator.translate('1.txt', '2.py')
