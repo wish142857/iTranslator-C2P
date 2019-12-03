@@ -71,4 +71,18 @@ def strlen(s):
         return _len
 '''
 
-c_utils = [strlen_py, gets_py, printf_py, scanf_py, system_py]
+atoi_py = '''
+def atoi(s):
+    if isinstance(s, str):
+        return int(s)
+    else:
+        sum = 0
+        for i in s:
+            if i == 0:
+                break
+            sum *= 10
+            sum += int(i)
+        return sum
+'''
+
+c_utils = [strlen_py, gets_py, printf_py, scanf_py, system_py, atoi_py]
