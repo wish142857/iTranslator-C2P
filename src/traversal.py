@@ -46,7 +46,7 @@ class Translator:
         if tree.key == 'unary_expression' and isinstance(tree.children[0], ASTExternalNode)\
                 and tree.children[0].value == '++':
             res = [code_list[1][0]+' = '+code_list[1][0]+' + 1']
-            print(res)
+            # print(res)
             return res
         # return
         elif tree.key == 'jump_statement' and tree.children[0].key == 'return' and len(tree.children) == 2:
@@ -55,12 +55,12 @@ class Translator:
             return [code_list[0][0] + ' '+ code_list[1][0]]
         # struct
         elif tree.key == 'struct_or_union_specifier' and len(tree.children) == 5:
-            print(code_list[1])
-            print(code_list[3])
+            # print(code_list[1])
+            # print(code_list[3])
             mstr = ''
             for item in code_list[3]:
                 mstr += item
-            print(code_list[1][0] + '={' + mstr + '}')
+            # print(code_list[1][0] + '={' + mstr + '}')
             return [code_list[1][0] + '={' + mstr + '}']
         elif tree.key == 'struct_declaration':
             return [ '\''+ code_list[1][0] + '\'' + ':\'\', ']
@@ -104,14 +104,40 @@ class Translator:
                 isinstance(tree.children[2], ASTInternalNode) and \
                     tree.children[2].key == 'assignment_expression':
             return [code_list[0][0] + '=[' + '0' + ']*' + code_list[2][0]]
-        # int s[10] = {1}; ==>  s = [1]*10
+        # int s[5] = {1,2,3}; ==>  s = [1,2,3,0,0]
+        # char s[5] = "abc"; ==>  s = ['a','b','c',0,0]
         elif tree.key == 'init_declarator' and len(tree.children) == 3 and code_list[0][0].find('[') >= 0:
-            tmp = code_list[0][0]
+            tmp = code_list[0][0] # s[0]*5
             index_1 = tmp.find('[')
-            index_2 = tmp.find(']')
-            code_list[0][0] = tmp[:index_1+1]+code_list[2][0]+tmp[index_2:]
-            print(code_list[0][0])
-            return [str(code_list[0][0])]
+            left = tmp[:index_1-1] # s
+            length = int(code_list[0][0].split('*')[1]) # 5
+            if code_list[2][0].find('"') >= 0:
+                # 处理"abc"
+                tmp = code_list[2][0] # "abc"
+                mstr = '['
+                for i in range(1,len(tmp)-1):
+                    mstr += '\''
+                    mstr += tmp[i]
+                    mstr += '\''
+                    mstr += ','
+                for i in range(0,length-len(tmp)+2):
+                    mstr += str(0)
+                    mstr += ','
+                mstr += ']'
+                # s = ['a', 'b', 'c', 0, 0]
+                result = left + '=' + mstr
+                print(result)
+                return [left + '=' + mstr]
+            else:
+                # 处理 {1,2,3} code_list[2][0] = 1,2,3
+                num = len(code_list[2][0].split(',')) # 3
+                for i in range(0,length-num):
+                    code_list[2][0] += ','
+                    code_list[2][0] += str(0)
+                # s = [1,2,3,0,0]
+                result = left+'=['+code_list[2][0]+']'
+                print(result)
+                return [result]
         elif tree.key == 'initializer' and len(tree.children) == 3:
             return code_list[1]
         # 函数参数列表中int的去除
