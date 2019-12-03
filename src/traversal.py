@@ -2,7 +2,7 @@
 from AST import ASTInternalNode, ASTExternalNode
 from yacc import parser
 import os
-
+from C_utils import c_utils
 
 INDENT_STRING = '    '
 
@@ -29,7 +29,11 @@ class Translator:
                 file_content = self.remove_sharp(input_file)
                 tree = parser.parse(file_content)
                 with open(output_file_name, 'w+') as output_file:
-                    output_file.write(formatIndent(self.filter(tree)))
+                    out = formatIndent(self.filter(tree))
+                    for c_util in c_utils:
+                        out = c_util + out
+                    out += '\nif __name__ == "__main__":\n    main()'
+                    output_file.write(out)
                 print('{} was translated to {} successfully.'.format(
                     input_file_name, output_file_name))
         except Exception as e:
@@ -233,4 +237,4 @@ class Translator:
 
 if __name__ == '__main__':
     translator = Translator()
-    translator.translate('1.txt', '2.txt')
+    translator.translate('palindrome.c', '2.py')
