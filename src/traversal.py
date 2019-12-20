@@ -22,6 +22,7 @@ class Translator:
     def __init__(self):
         self.functions = []
         self.declarations = []
+        self.global_variables = []
 
     def translate(self, input_file_name, output_file_name):
         try:
@@ -45,7 +46,15 @@ class Translator:
             if line.find('#') < 0:
                 return line + input_file.read()
 
-    def compose(self, tree, code_list):
+    def declaration_compose(self, tree, code_list):
+        if tree.key == 'declaration':
+            self.global_variables.append(None)
+            if len(tree.children) == 3:
+                return code_list[1]
+            elif len(tree.children) == 2:
+                return code_list[0]
+
+    def function_compose(self, tree, code_list):
         # ++i
         if tree.key == 'unary_expression' and isinstance(tree.children[0], ASTExternalNode)\
                 and tree.children[0].value == '++':
@@ -208,7 +217,7 @@ class Translator:
         else:
             return [tree.value]
 
-    def traversal(self, tree, stack):
+    def traversal(self, tree, stack, type):
         stack.append(tree.key)
         code_list = []
 
@@ -216,9 +225,12 @@ class Translator:
             stack.pop()
             return self.leaf_string(tree)
         for child in tree.children:
-            code_list.append(self.traversal(child, stack))
+            code_list.append(self.traversal(child, stack, type))
         #print(tree.key, code_list)
-        pycode = self.compose(tree, code_list)
+        if type == 'declaration':
+            pycode = self.declaration_compose(tree, code_list)
+        else:
+            pycode = self.function_compose(tree, code_list)
         stack.pop()
         return pycode
 
@@ -242,12 +254,12 @@ class Translator:
                     break
         code = []
         for declaration in self.declarations:
-            code.extend(self.traversal(declaration, []))
+            code.extend(self.traversal(declaration, [], 'declaration'))
         for function in self.functions:
-            code.extend(self.traversal(function, []))
+            code.extend(self.traversal(function, [], 'function'))
         return code
 
 
 if __name__ == '__main__':
     translator = Translator()
-    translator.translate('1.txt', '2.py')
+    translator.translate('test.c', '3.py')
