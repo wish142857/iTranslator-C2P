@@ -1,3 +1,6 @@
+# coding=utf-8
+# this file provides some C std library functions
+
 import re
 def scanf(format):
     s = input()
@@ -26,6 +29,7 @@ def scanf(format, *args):
     pass
 '''
 
+# C 中的gets函数
 gets_py='''
 def gets(s):
     s_in = input()
@@ -33,11 +37,13 @@ def gets(s):
         s[i] = c
 '''
 
+# C 中的printf函数
 printf_py = '''
 def printf(format, *args):
     print(format % args, end='')
 '''
 
+# C中的system函数
 system_py = '''
 def system(s):
     if not isinstance(s, str):
@@ -47,6 +53,7 @@ def system(s):
     os.system(s)
 '''
 
+
 def strlen(s):
     if isinstance(s, str):
         return len(s)
@@ -58,6 +65,7 @@ def strlen(s):
             _len += 1
         return _len
 
+# C 中的strlen函数，这里通过None判断数组末尾
 strlen_py = '''
 def strlen(s):
     if isinstance(s, str):
@@ -65,12 +73,13 @@ def strlen(s):
     else:
         _len = 0
         for i in s:
-            if i == 0:
+            if i is None:
                 break
             _len += 1
         return _len
 '''
 
+# C 中的atoi函数
 atoi_py = '''
 def atoi(s):
     if isinstance(s, str):
@@ -78,7 +87,7 @@ def atoi(s):
     else:
         sum = 0
         for i in s:
-            if i == 0:
+            if i is None:
                 break
             sum *= 10
             sum += int(i)

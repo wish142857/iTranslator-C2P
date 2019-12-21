@@ -1,7 +1,8 @@
 import re
 
 
-def format_str(s):
+# 优化生成代码的风格
+def lint(s):
     sstr = ''
     i = 0
     while i < len(s):
@@ -88,21 +89,29 @@ def format_str(s):
             sstr += s[i:tmp + 1]
             i = tmp + 1
             continue
+        elif s[i] == ',':
+            sstr += ', '
+            i = i + 1
+            continue
+        elif s[i] == '"':
+            next = s.find('"', i + 1, len(s))
+            sstr += s[i:next + 1]
+            i = next + 1
+            continue
         else:
             sstr += s[i]
             i = i + 1
             continue
     return sstr
 
-INDENT_STRING = '    '
 
 def formatIndent(item, rank=-1):
-    #print(item)
+    INDENT_STRING = '    '
     if type(item) == str:
-        item = format_str(item)
-        if '(' not in item and ' ' not in item and item != 'break' and item != 'continue' and item != 'pass' \
-                and item != 'else:' and item != 'if':
-            item+=' = None'
+        item = lint(item)
+        if '(' not in item and ' ' not in item and '=' not in item and item != '' and  item != 'break' and item != 'continue' and item != 'pass' \
+                and item != 'else:' and item != 'if' and item != 'return':
+            item += ' = None'
         return INDENT_STRING * rank + item
     if type(item) == list:
         lines = []
@@ -110,13 +119,14 @@ def formatIndent(item, rank=-1):
             lines.append(formatIndent(i, rank + 1))
         return '\n'.join(lines)
 
+
 def precompile(filename):
     """ 预处理文件 """
     """ 返回:(bool-是否成功, string-成功返回处理后源代码，失败返回错误信息) """
     """ 返回:(bool, string) """
     # 读取文件
     try:
-        file = open(filename, encoding='utf-8')
+        file = open(filename, 'r', encoding='utf-8')
         lines = file.read().split('\n')
         file.close()
     except FileNotFoundError:
