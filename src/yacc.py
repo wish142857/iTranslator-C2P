@@ -3,11 +3,13 @@ import re
 import ply.yacc as yacc
 from lex import tokens, identifier
 from AST import ASTInternalNode
+from AST import ASTExternalNode
 
+reserved_list = ['true', 'false']
 
 # 开始符号
 # 推导 -> 全局声明（external_declaration） 列表
-from AST import ASTExternalNode
+
 
 
 def p_translation_unit(p):
@@ -106,7 +108,7 @@ def p_enum_specifier(p):
                         | ENUM '{' enumerator_list ',' '}'
                         | ENUM IDENTIFIER '{' enumerator_list ',' '}'
                         | ENUM IDENTIFIER '''
-    if not p[2] == '{':
+    if not p[2] == '{' and not p[2] in reserved_list:
         p[2] = ASTExternalNode('IDENTIFIER', p[2])
     p[0] = ASTInternalNode('enum_specifier', p[1:])
 
@@ -122,7 +124,8 @@ def p_enumerator_list(p):
 def p_enumerator(p):
     ''' enumerator : IDENTIFIER
                    | IDENTIFIER '=' constant_expression '''
-    p[1] = ASTExternalNode('IDENTIFIER', p[1])
+    if not p[1] in reserved_list:
+        p[1] = ASTExternalNode('IDENTIFIER', p[1])
     p[0] = ASTInternalNode('enumerator', p[1:])
 
 
@@ -131,7 +134,7 @@ def p_struct_or_union_specifier(p):
     ''' struct_or_union_specifier : struct_or_union IDENTIFIER '{' struct_declaration_list '}'
                                   | struct_or_union '{' struct_declaration_list '}'
                                   | struct_or_union IDENTIFIER '''
-    if not p[2] == '{':
+    if not p[2] == '{' and not p[2] in reserved_list:
         p[2] = ASTExternalNode('IDENTIFIER', p[2])
     p[0] = ASTInternalNode('struct_or_union_specifier', p[1:])
 
@@ -218,7 +221,7 @@ def p_direct_declarator(p):
                         | direct_declarator '(' parameter_type_list ')'
                         | direct_declarator '(' identifier_list ')'
                         | direct_declarator '(' ')' '''
-    if len(p) == 2:
+    if len(p) == 2 and not p[1] in reserved_list:
         p[1] = ASTExternalNode('IDENTIFIER', p[1])
     p[0] = ASTInternalNode('direct_declarator', p[1:])
 
@@ -227,9 +230,9 @@ def p_direct_declarator(p):
 def p_identifier_list(p):
     ''' identifier_list : IDENTIFIER
                         | identifier_list ',' IDENTIFIER '''
-    if len(p) == 2:
+    if len(p) == 2 and not p[1] in reserved_list:
         p[1] = ASTExternalNode('IDENTIFIER', p[1])
-    elif len(p) == 4:
+    elif len(p) == 4 and not p[3] in reserved_list:
         p[3] = ASTExternalNode('IDENTIFIER', p[3])
     p[0] = ASTInternalNode('identifier_list', p[1:])
 
@@ -389,7 +392,7 @@ def p_postfix_expression(p):
                            | postfix_expression DEC_OP
                            | '(' type_name ')' '{' initializer_list '}'
                            | '(' type_name ')' '{' initializer_list ',' '}' '''
-    if len(p) == 4 and not p[2] == '(':
+    if len(p) == 4 and not p[2] == '(' and not p[3] in reserved_list:
         p[3] = ASTExternalNode('IDENTIFIER', p[3])
     p[0] = ASTInternalNode('postfix_expression', p[1:])
 
@@ -400,7 +403,7 @@ def p_primary_expression(p):
                            | CONSTANT
                            | STRING_LITERAL
                            | '(' expression ')' '''
-    if re.match(r'(([_a-zA-Z])([0-9]|([_a-zA-Z]))*)', p[1]):
+    if re.match(r'(([_a-zA-Z])([0-9]|([_a-zA-Z]))*)', p[1]) and not p[1] in reserved_list:
         p[1] = ASTExternalNode('IDENTIFIER', str(p[1]))
     p[0] = ASTInternalNode('primary_expression', p[1:])
 
@@ -507,7 +510,7 @@ def p_designator_list(p):
 def p_designator(p):
     ''' designator : '[' constant_expression ']'
                    | '.' IDENTIFIER '''
-    if len(p) == 3:
+    if len(p) == 3 and not p[2] in reserved_list:
         p[2] = ASTExternalNode('IDENTIFIER', p[2])
     p[0] = ASTInternalNode('designator', p[1:])
 
@@ -564,7 +567,7 @@ def p_labeled_statement(p):
     ''' labeled_statement : IDENTIFIER ':' statement
                           | CASE constant_expression ':' statement
                           | DEFAULT ':' statement '''
-    if len(p) == 4 and not p[1] == 'default':
+    if len(p) == 4 and not p[1] == 'default' and not p[1] in reserved_list:
         p[1] = ASTExternalNode('IDENTIFIER', p[1])
     p[0] = ASTInternalNode('labeled_statement', p[1:])
 
@@ -602,7 +605,7 @@ def p_jump_statement(p):
                        | BREAK ';'
                        | RETURN ';'
                        | RETURN expression ';' '''
-    if len(p) == 4 and p[1] == 'goto':
+    if len(p) == 4 and p[1] == 'goto' and not p[2] in reserved_list:
         p[2] = ASTExternalNode('IDENTIFIER', p[2])
     p[0] = ASTInternalNode('jump_statement', p[1:])
 

@@ -1,6 +1,3 @@
-# coding=utf-8
-# this file provides some C std library functions
-
 import re
 def scanf(format):
     s = input()
@@ -25,13 +22,13 @@ def scanf(format):
 #print(scanf('%d%d%d'))
 
 scanf_py = '''
-def scanf(format, *args):
+def scanf_0(format, *args):
     pass
 '''
 
 # C 中的gets函数
 gets_py='''
-def gets(s):
+def gets_0(s):
     s_in = input()
     for i, c in enumerate(s_in):
         s[i] = c
@@ -39,13 +36,13 @@ def gets(s):
 
 # C 中的printf函数
 printf_py = '''
-def printf(format, *args):
+def printf_0(format, *args):
     print(format % args, end='')
 '''
 
 # C中的system函数
 system_py = '''
-def system(s):
+def system_0(s):
     if not isinstance(s, str):
         s = filter(lambda x: x != 0, s)
         s = ''.join(s)
@@ -67,7 +64,7 @@ def strlen(s):
 
 # C 中的strlen函数，这里通过None判断数组末尾
 strlen_py = '''
-def strlen(s):
+def strlen_0(s):
     if isinstance(s, str):
         return len(s)
     else:
@@ -81,7 +78,7 @@ def strlen(s):
 
 # C 中的atoi函数
 atoi_py = '''
-def atoi(s):
+def atoi_0(s):
     if isinstance(s, str):
         return int(s)
     else:
@@ -94,4 +91,17 @@ def atoi(s):
         return sum
 '''
 
-c_utils = [strlen_py, gets_py, printf_py, scanf_py, system_py, atoi_py]
+atof_py = '''
+def atof_0(s):
+    if isinstance(s, str):
+        return int(s)
+    else:
+        mstr = ''
+        for i in s:
+            if i is None:
+                break
+            mstr += i
+        return float(mstr)
+'''
+
+c_utils = [strlen_py, gets_py, printf_py, scanf_py, system_py, atoi_py, atof_py]

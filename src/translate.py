@@ -8,7 +8,7 @@ from pre_post_process import formatIndent, precompile
 
 TAIL = """
 if __name__ == "__main__":
-    main()
+    main_0()
 """
 
 
@@ -43,7 +43,7 @@ class Translator:
     # 属性flag：是否是结构体，如果是，返回结构体名；如果否，返回空串
     def flag_calculate(self, tree, flag_list):
         if tree.key == 'struct_or_union_specifier':
-            print("class name", tree.children[1].value)
+            # print("class name", tree.children[1].value)
             return tree.children[1].value
         else:
             for flag in flag_list:
@@ -117,6 +117,9 @@ class Translator:
         self.declarations = reversed(self.declarations)
         code_list = []
         for declaration in self.declarations:
+            is_function = self.is_function_declaration(declaration)
+            if is_function:
+                continue
             self.declaration_extract(declaration)
             code, flag = self.traversal(declaration, [], 'declaration')
             code_list.extend(code)
@@ -126,6 +129,22 @@ class Translator:
             code, flag = self.traversal(function, [], 'function')
             code_list.extend(code)
         return code_list
+
+    # 判断一个声明是否为函数声明
+    def is_function_declaration(self, tree):
+        for child in tree.children:
+            if isinstance(child, ASTExternalNode):
+                return False
+            if child.key == 'direct_declarator':
+                if len(child.children) > 1 and isinstance(child.children[1], ASTExternalNode) \
+                        and child.children[1].value == '(':
+                    return True
+                else:
+                    return False
+            else:
+                if self.is_function_declaration(child):
+                    return True
+        return False
 
     # 提取所有的全局变量
     def declaration_extract(self, tree):
@@ -139,8 +158,10 @@ class Translator:
             # 如果是变量
             if child.key == 'IDENTIFIER':
                 # 在变量表中记录该变量
-                self.global_variables.append(child.value)
-                self.variable_table[child.value] = [(child.value, True)]
+                alias = child.value + '_0'
+                self.global_variables.append(alias)
+                self.variable_table[child.value] = [(alias, True)]
+                child.value = alias
             else:
                 self.declaration_extract(child)
 
@@ -160,10 +181,13 @@ class Translator:
             # 结构体内部变量直接跳过
             elif tree.key == 'struct_or_union_specifier':
                 return
+                # for child in tree.children:
+                #     self.name_replacement(child, False)
             #
             elif tree.key == 'postfix_expression' and len(tree.children) == 3 \
                     and isinstance(tree.children[2], ASTExternalNode) and tree.children[2].key == 'IDENTIFIER':
-                return
+                for child in tree.children[:2]:
+                    self.name_replacement(child, False)
             # 选择或循环语句，进入新一层作用域
             elif tree.key == 'iteration_statement' or tree.key == 'selection_statement':
                 # 进入作用域，保存副本
@@ -186,12 +210,14 @@ class Translator:
                     table = self.variable_table[tree.value]
                     # 不需要重命名
                     if len(table) == 0:
-                        table.append((tree.value, False))
+                        alias = tree.value + '_0'
+                        table.append((alias, False))
+                        tree.value = alias
                     # 需要重命名并修改变量表
                     else:
-                        last = table[-1][0]
-                        table.append((last + '_', False))
-                        tree.value = last + '_'
+                        alias = tree.value + '_' + str(len(table))
+                        table.append((alias, False))
+                        tree.value = alias
                 # 不是声明
                 else:
                     table = self.variable_table[tree.value]
@@ -199,6 +225,12 @@ class Translator:
                     if len(table) != 0:
                         last = table[-1][0]
                         tree.value = last
+                    else:
+                        tree.value = tree.value + '_0'
+            else:
+                alias = tree.value + '_0'
+                self.variable_table[tree.value] = alias
+                tree.value = alias
         # 离开函数（作用域），恢复变量表
         self.variable_table = table_copy
 
@@ -345,7 +377,7 @@ class Translator:
             """
             数组变量名
             """
-            print("name", tree.children[0], [code_list[0][0]])
+            # print("name", tree.children[0], [code_list[0][0]])
             return [code_list[0][0]]
 
         # 形如int x, y=2;的声明中的x, y=2 , Python中需要分行
@@ -430,7 +462,7 @@ class Translator:
                         tmp = tmp.rstrip()
                         result = []
                         result.append(tmp)
-                print(result)
+                # print(result)
                 return result
 
             #
@@ -456,7 +488,7 @@ class Translator:
             index_1 = tmp.find('[')
             left = tmp[:index_1 - 1]  # s
             length = code_list[0][0].split('*')[1]  # 5
-            print(length)
+            # print(length)
 
             # 字符数组 "..."初始化
             if code_list[2][0].find('"') >= 0:
@@ -513,4 +545,4 @@ class Translator:
 
 if __name__ == '__main__':
     translator = Translator()
-    translator.translate('calculator.cpp', '3new.py')
+    translator.translate('test.c', 'f.py')
