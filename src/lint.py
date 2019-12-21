@@ -100,6 +100,9 @@ def formatIndent(item, rank=-1):
     #print(item)
     if type(item) == str:
         item = format_str(item)
+        if '(' not in item and ' ' not in item and item != 'break' and item != 'continue' and item != 'pass' \
+                and item != 'else:' and item != 'if':
+            item+=' = None'
         return INDENT_STRING * rank + item
     if type(item) == list:
         lines = []

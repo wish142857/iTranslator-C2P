@@ -60,16 +60,30 @@ class Translator:
             #self.global_variables.append(code_list[0][0].split('=')[0])
         # in x = 1 中int的去除
         if tree.key == 'declaration':
-            if len(tree.children) == 3 and flag != 'class':
+            if len(tree.children) == 3 and flag == '':
                 return code_list[1]
-            elif len(tree.children) == 3 and flag == 'class':
+            elif len(tree.children) == 3 and flag != '':
                 # return [code_list[0][0],
                 #         code_list[1][0] + ' = ' + code_list[0][0].split('class ')[1].split(':')[0] + '()'
                 #         ]
-                result = code_list[0]
+
+                if flag != code_list[0][0]:
+                    result = code_list[0]
+                else:
+                    result = []
                 for class_obj in code_list[1]:
-                    result.append(class_obj + ' = ' + code_list[0][0].split('class ')[1].split(':')[0] + '()')
+                    result.append(class_obj + ' = ' + flag + '()')
                 print(result)
+                if len(result) == 1:
+                    tmp = result[0]
+                    if tmp.find('=') != tmp.rfind('='):
+                        tmp_2 = tmp.split('=')[2]
+                        tmp_2 = tmp_2.lstrip()
+                        tmp = tmp.split('=')[0] + '=' + tmp.split('=')[1]
+                        tmp = tmp[0:tmp.find('[') + 1] + tmp_2 + tmp[tmp.find(']'):]
+                        tmp = tmp.rstrip()
+                        result = []
+                        result.append(tmp)
                 return result
             # elif len(tree.children) == 3 and flag == 'no_def':
             #     return [code_list[1][0] + '=None']
@@ -114,6 +128,8 @@ class Translator:
                 result = left + '=[' + code_list[2][0] + ']'
                 # print(result)
                 return [result]
+        # elif tree.key == 'init_declarator' and len(tree.children) == 1 and flag == '':
+        #     return [code_list[0][0] + '=None']
         elif tree.key == 'init_declarator_list':
             if len(tree.children) == 1:
                 print(code_list[0])
@@ -135,7 +151,10 @@ class Translator:
         #         return code_list[0]
         # # elif tree.key == 'struct_or_union':
         # #     return
-        elif tree.key == 'struct_or_union_specifier':
+        elif tree.key == 'struct_or_union_specifier' and len(tree.children) == 2:
+            return code_list[1]
+        elif tree.key == 'struct_or_union_specifier' and len(tree.children) == 5:
+            print(tree.children)
             return [code_list[0][0] + ' ' + code_list[1][0] + ':',
                     code_list[3]]
         elif tree.key == 'struct_declaration_list':
@@ -146,6 +165,8 @@ class Translator:
             return lst
         elif tree.key == 'struct_declaration':
             return [code_list[1][0] + ' = None']
+        elif tree.key == 'initializer' and len(tree.children) == 3:
+            return code_list[1]
         else:
             lst = []
             flag = True
@@ -267,6 +288,7 @@ class Translator:
                 return [left + '=' + mstr]
             else:
                 # 处理 {1,2,3} code_list[2][0] = 1,2,3
+                print("array2", code_list[2][0])
                 num = len(code_list[2][0].split(',')) # 3
                 for i in range(0,length-num):
                     code_list[2][0] += ','
@@ -318,9 +340,10 @@ class Translator:
 
     def flag_calculate(self, tree, flag_list):
         if tree.key == 'struct_or_union_specifier':
-            return 'class'
-        if tree.key == 'init_declarator' and len(tree.children) == 1:
-            return 'no_def'
+            print("class name", tree.children[1].value)
+            return tree.children[1].value#'class'
+        # if tree.key == 'init_declarator' and len(tree.children) == 1:
+        #     return 'no_def'
         else:
             for flag in flag_list:
                 if flag != '':
@@ -389,8 +412,7 @@ class Translator:
                     pick_out(tree.children[0].children[0])
                     break
 
-
-
+        self.declarations = reversed(self.declarations)
         code_list = []
         for declaration in self.declarations:
             self.declaration_extract(declaration)
@@ -464,4 +486,4 @@ class Translator:
 
 if __name__ == '__main__':
     translator = Translator()
-    translator.translate('3.txt', '3.py')
+    translator.translate('test.c', 'test.py')
