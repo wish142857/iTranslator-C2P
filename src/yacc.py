@@ -581,8 +581,8 @@ def p_expression_statement(p):
 
 # 选择语句
 def p_selection_statement(p):
-    ''' selection_statement : IF '(' expression ')' statement
-                            | IF '(' expression ')' statement ELSE statement
+    ''' selection_statement : IF '(' expression ')' statement ELSE statement
+                            | IF '(' expression ')' statement
                             | SWITCH '(' expression ')' statement '''
     p[0] = ASTInternalNode('selection_statement', p[1:])
 

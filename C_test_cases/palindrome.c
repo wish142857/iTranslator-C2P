@@ -2,22 +2,21 @@
 #include <string.h>
 #include <stdlib.h>
 
-int main(int argc, char **argv)
+int main()
 {
+    printf("Please input a string:");
     char s[100];
-    scanf("%s", s);
+    gets(s);
     int len = strlen(s);
     int mid = len / 2;
     for (int i = 0; i < len / 2; i++)
     {
         if (s[i] != s[len - 1 - i])
         {
-            printf("False");
-            system("pause");
+            printf("Not a palindrome!");
             return 0;
         }
     }
-    printf("True");
-    system("pause");
+    printf("A palindrome!");
     return 0;
 }

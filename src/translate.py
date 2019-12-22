@@ -21,22 +21,30 @@ class Translator:
         self.head = ""
         for c_util in c_utils:
             self.head += c_util
+        self.head += '\n'
         self.tail = TAIL
 
     def translate(self, input_file_name, output_file_name):
         try:
-            if True:
-                success, file_content = precompile(input_file_name)
-                if not success:
-                    print(file_content)
-                    return
-                tree = parser.parse(file_content)
-                raw_outcome = self.process(tree)
-                out = formatIndent(raw_outcome)
-                out = self.head + out + self.tail
-                with open(output_file_name, 'w+', encoding='utf-8') as output_file:
-                    output_file.write(out)
-                print('{} 成功翻译为 {} 。'.format(input_file_name, output_file_name))
+            # 模拟预编译
+            success, file_content = precompile(input_file_name)
+            if not success:
+                print(file_content)
+                return
+            # 解析得到语法树
+            tree = parser.parse(file_content)
+
+            # 语义处理
+            raw_outcome = self.process(tree)
+
+            # 转化为正确格式，优化代码风格，加上首尾代码
+            out = formatIndent(raw_outcome)
+            out = self.head + out + self.tail
+
+            # 输出
+            with open(output_file_name, 'w+', encoding='utf-8') as output_file:
+                output_file.write(out)
+            print('{} 成功翻译为 {} 。'.format(input_file_name, output_file_name))
         except Exception as e:
             print(str(e))
 
@@ -89,7 +97,7 @@ class Translator:
         except Exception as e:
             print(str(e))
 
-        # 通过子节点的code属性计算此节点的code属性
+        # 通过子节点的code属性和计算得到的flag属性计算此节点的code属性
         pycode = self.code_compose(tree, code_list, flag_to_upper)
 
         stack.pop()
@@ -123,11 +131,17 @@ class Translator:
             self.declaration_extract(declaration)
             code, flag = self.traversal(declaration, [], 'declaration')
             code_list.extend(code)
+            code_list.append('')  # 空行
 
         for function in self.functions:
+            # 进入函数（作用域），备份变量表
+            table_copy = copy.deepcopy(self.variable_table)
             self.name_replacement(function)
+            # 离开函数（作用域），恢复变量表
+            self.variable_table = table_copy
             code, flag = self.traversal(function, [], 'function')
             code_list.extend(code)
+            code_list.append('')
         return code_list
 
     # 判断一个声明是否为函数声明
@@ -167,8 +181,7 @@ class Translator:
 
     # 对可能发生覆盖的变量进行重命名
     def name_replacement(self, tree, is_declarator=False):
-        # 进入函数（作用域），备份变量表
-        table_copy = copy.deepcopy(self.variable_table)
+
         if isinstance(tree, ASTInternalNode):
             # 进入声明语句
             if tree.key == 'declarator':
@@ -229,10 +242,9 @@ class Translator:
                         tree.value = tree.value + '_0'
             else:
                 alias = tree.value + '_0'
-                self.variable_table[tree.value] = alias
+                self.variable_table[tree.value] = [(alias, False)]
                 tree.value = alias
-        # 离开函数（作用域），恢复变量表
-        self.variable_table = table_copy
+
 
     # 自下而上的翻译函数
     # 每个节点的code属性为子节点的code属性的函数
@@ -307,7 +319,7 @@ class Translator:
                 while 条件:
                     代码块（缩进+1）
                 """
-                return ['while ' + ' ' + code_list[2][0] + ':', code_list[4]]
+                return ['while ' + code_list[2][0] + ':', code_list[4]]
             #  for (...; ...; ...) {
             #      ...
             #  }
@@ -377,7 +389,6 @@ class Translator:
             """
             数组变量名
             """
-            # print("name", tree.children[0], [code_list[0][0]])
             return [code_list[0][0]]
 
         # 形如int x, y=2;的声明中的x, y=2 , Python中需要分行
@@ -424,15 +435,8 @@ class Translator:
             """
             return lst
 
-        # 结构体定义内的语句（C不能有初始值，但Python必须要定义）
-        elif tree.key == 'struct_declaration':
-            """
-            成员变量 = None
-            """
-            return [code_list[1][0] + '=None']
-
         # 声明语句
-        if tree.key == 'declaration':
+        if tree.key == 'declaration' or tree.key == 'struct_declaration':
 
             # 变量（非结构体）声明，去除变量类型和分号
             if len(tree.children) == 3 and flag == '':
@@ -482,13 +486,11 @@ class Translator:
             """
             return [code_list[0][0] + '=[' + 'None' + ']*' + code_list[2][0]]
 
-
         elif tree.key == 'init_declarator' and len(tree.children) == 3 and code_list[0][0].find('[') >= 0:
             tmp = code_list[0][0]  # s[0]*5
             index_1 = tmp.find('[')
             left = tmp[:index_1 - 1]  # s
             length = code_list[0][0].split('*')[1]  # 5
-            # print(length)
 
             # 字符数组 "..."初始化
             if code_list[2][0].find('"') >= 0:
@@ -541,8 +543,3 @@ class Translator:
                 for code in code_list:
                     lst.extend(code)
             return lst
-
-
-if __name__ == '__main__':
-    translator = Translator()
-    translator.translate('test.c', 'f.py')

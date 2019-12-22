@@ -108,10 +108,11 @@ FS = r'(f|F|l|L)'
 # 整型数修饰符
 IS = r'(u|U|l|L)*'
 
-# 布尔
-boolean = r'(true|false)'
+
 # 标识符
 identifier = r'(%s(%s|%s)*)' % (L, D, L)
+# 布尔
+boolean = r'(true|false)'
 # 整型数字
 integer = r'(0?%s+%s?|0[xX]%s+%s?|%s+%s%s?)' % (D, IS, H, IS, D, E, FS)
 # 浮点数字（小数）
@@ -122,7 +123,6 @@ char = r'(\'(\\.|[^\\\'])+\')'
 constant = r'(%s|%s|%s|%s)' % (decimal, integer, char, boolean)
 # 字符串原文
 string_literal = r'"(\\.|[^\\"])*"'
-
 
 
 @TOKEN(constant)

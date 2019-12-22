@@ -1,3 +1,4 @@
+import os
 import re
 
 
@@ -85,7 +86,6 @@ def lint(s):
                     continue
         elif s[i] == "'":
             tmp = s.find("'", i + 1, len(s))
-            print(tmp)
             sstr += s[i:tmp + 1]
             i = tmp + 1
             continue
@@ -109,8 +109,9 @@ def formatIndent(item, rank=-1):
     INDENT_STRING = '    '
     if type(item) == str:
         item = lint(item)
-        if '(' not in item and ' ' not in item and '=' not in item and item != '' and  item != 'break' and item != 'continue' and item != 'pass' \
-                and item != 'else:' and item != 'if' and item != 'return':
+        # 对于只声明不定义的变量需要补上=None
+        if '(' not in item and ' ' not in item and '=' not in item and item != '' and item != 'break' \
+                and item != 'continue' and item != 'pass' and item != 'else:' and item != 'if' and item != 'return':
             item += ' = None'
         return INDENT_STRING * rank + item
     if type(item) == list:
@@ -124,6 +125,8 @@ def precompile(filename):
     """ 预处理文件 """
     """ 返回:(bool-是否成功, string-成功返回处理后源代码，失败返回错误信息) """
     """ 返回:(bool, string) """
+    # 文件夹路径
+    folder = os.path.dirname(filename)
     # 读取文件
     try:
         file = open(filename, 'r', encoding='utf-8')
@@ -154,7 +157,7 @@ def precompile(filename):
                 # include 识别
                 elif words[0] == 'include':
                     if words[1][0] == '"' and words[1][-1] == '"':
-                        macro_include_list.append(words[1][1:-1])
+                        macro_include_list.append(os.path.join(folder, words[1][1:-1]))
                     elif words[1][0] == '<' and words[1][-1] == '>':
                         pass
                     else:
