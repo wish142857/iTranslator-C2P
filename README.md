@@ -1,2 +1,2 @@
-# iCompiler-C2P
+# iTranslator-C2P
 Translator for converting C / C + + to Python.
